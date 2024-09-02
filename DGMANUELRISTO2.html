@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA POS INTEGRATO - DGMANUEL 2.0</title>
+    <style>
+        :root {
+            --primary-color: #FF4B4B;
+            --secondary-color: #FFD700;
+            --background-color: #FFFFFF;
+            --text-color: #000000;
+            --non-gestito-color: #FF6B6B;
+            --in-preparazione-color: #FFD93D;
+            --completato-color: #90EE90;
+            --in-pagamento-color: #87CEEB;
+        }
+        body, * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        h1, h2, h3 {
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .view-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        select, button {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .section {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .menu-section { 
+            background: #f0f0f0; 
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .menu-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .quantity-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .quantity-control button {
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            line-height: 1;
+            background-color: var(--secondary-color);
+        }
+        .quantity-display {
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        .order-section {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .order-list {
+            margin-top: 20px;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .orders {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .order-card {
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s;
+        }
+        .order-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .order-card.non-gestito { background-color: var(--non-gestito-color); }
+        .order-card.in-preparazione { background-color: var(--in-preparazione-color); }
+        .order-card.completato { background-color: var(--completato-color); }
+        .order-card.in-pagamento { background-color: var(--in-pagamento-color); }
+        .state-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .state-button {
+            padding: 8px 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .cassa-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .tavoli-list, .conti-list {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .cassa-button {
+            background: var(--secondary-color);
+            color: var(--text-color);
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        .report-section {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+        .report-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .report-button {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #reportOggi {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        #tavoloSelect {
+            font-size: 20px;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            background-color: var(--secondary-color);
+        }
+        .tavoli-occupati {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .tavoli-occupati h3 {
+            font-weight: bold;
+            color: black;
+        }
+        .tavolo-occupato {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: black;
+            font-weight: bold;
+        }
+        .tavolo-occupato h4 {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: black;
+        }
+        .tavolo-occupato.non-gestito { background-color: var(--non-gestito-color); }
+        .tavolo-occupato.in-preparazione { background-color: var(--in-preparazione-color); }
+        .tavolo-occupato.completato { background-color: var(--completato-color); }
+        .tavolo-occupato.in-pagamento { background-color: var(--in-pagamento-color); }
+        .tavolo-occupato .quantity-control {
+            display: inline-flex;
+            margin-left: 10px;
+        }
+        .tavolo-occupato .quantity-control button {
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            padding: 0;
+        }
+        .stampa-comanda {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SISTEMA POS INTEGRATO - DGMANUEL 2.0</h1>
+        <div class="view-selector">
+            <select id="viewSelect">
+                <option value="sala">SALA</option>
+                <option value="cucina">CUCINA</option>
+                <option value="cassa">CASSA</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sezione SALA -->
+        <section id="sala" class="section active">
+            <h2>Gestione Sala</h2>
+            <select id="tavoloSelect">
+                <option value="">Seleziona un tavolo</option>
+            </select>
+            <div class="menu-section">
+                <select id="categoria">
+                    <option value="">Seleziona una categoria</option>
+                </select>
+                <div id="menu-grid" class="menu-grid"></div>
+            </div>
+            <div class="order-section">
+                <h3 id="tavolo-selezionato">Nessun tavolo selezionato</h3>
+                <div id="order-list" class="order-list"></div>
+                <div id="total">Totale: € 0.00</div>
+                <button onclick="inviaOrdine()">Invia Ordine</button>
+                <button class="stampa-comanda" onclick="stampaComanda()">STAMPA COMANDA</button>
+            </div>
+            <div class="tavoli-occupati">
+                <h3>TAVOLI OCCUPATI</h3>
+                <div id="tavoli-occupati-list"></div>
+            </div>
+        </section>
+
+        <!-- Sezione CUCINA -->
+        <section id="cucina" class="section">
+            <h2>Gestione Cucina</h2>
+            <div id="ordini" class="orders"></div>
+        </section>
+
+        <!-- Sezione CASSA -->
+        <section id="cassa" class="section">
+            <h2>Gestione Cassa</h2>
+            <div class="cassa-grid">
+                <div class="tavoli-list">
+                    <h3>Tavoli Aperti</h3>
+                    <select id="tavoli-aperti"></select>
+                    <div id="dettagli-tavolo"></div>
+                    <button class="cassa-button" onclick="finalizzaPagamento('tavolo')">Finalizza Pagamento</button>
+                    <button class="stampa-comanda" onclick="stampaComanda()">STAMPA COMANDA</button>
+                </div>
+                <div class="conti-list">
+                    <h3>Conti Aperti</h3>
+                    <select id="conti-aperti"></select>
+                    <div id="dettagli-conto"></div>
+                    <button class="cassa-button" onclick="finalizzaPagamento('conto')">Finalizza Pagamento</button>
+                    <button class="cassa-button" onclick="apriNuovoConto()">Nuovo Conto</button>
+                </div>
+            </div>
+            <div class="menu-section">
+                <select id="categoria-cassa">
+                    <option value="">Seleziona una categoria</option>
+                </select>
+                <div id="menu-grid-cassa" class="menu-grid"></div>
+            </div>
+            <div class="tavoli-occupati">
+                <h3>TAVOLI OCCUPATI</h3>
+                <div id="tavoli-occupati-list-cassa"></div>
+            </div>
+            <div class="report-section">
+                <h3>Report</h3>
+                <div class="report-buttons">
+                    <button class="report-button" onclick="generaReport('oggi')">Oggi</button>
+                    <button class="report-button" onclick="generaReport('settimana')">Settimana</button>
+                    <button class="report-button" onclick="generaReport('mese')">Mese</button>
+                    <button class="report-button" onclick="generaReport('anno')">Anno</button>
+                </div>
+                <div id="reportOggi"></div>
+                <div id="reportDettagliato"></div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update, push, set, get, remove } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAJjn3RiRCcKd4dhpr8kTqmtoS9LOuaqM",
+            authDomain: "barbershop-e793f.firebaseapp.com",
+            databaseURL: "https://barbershop-e793f-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "barbershop-e793f",
+            storageBucket: "barbershop-e793f.appspot.com",
+            messagingSenderId: "588610893898",
+            appId: "1:588610893898:web:7d8578757ae2e264ab4eb3",
+            measurementId: "G-5X5Q3M19RW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+
+        // Menu data
+        const MENU = {
+            'ENTRADAS': {
+                'Leche de Tigre': 8.00,
+                'Choritos a la Chalaca': 15.00,
+                'Ocopa': 8.00,
+                'Tamales': 6.00,
+                'Papa Rellena': 8.00,
+                'Papa a la Huancaina': 8.00,
+                'Choclito con Queso': 6.00,
+                'Causa Rellena': 8.00
+            },
+            'CRIOLLO': {
+                'Arroz Chaufa de Pollo': 12.00,
+                'Arroz Chaufa de Carne': 16.00,
+                'Lomo Saltado': 16.00,
+                'Lomo Mixto': 17.00,
+                'Pollo Frito': 15.00,
+                'Pollo Broaster': 15.00,
+                'Anticuchos': 16.00,
+                'Bistec a lo Pobre': 16.00,
+                'Sopa de Mote': 12.00,
+                'Sopa Sustancia': 12.00,
+                'Sopa a la Minuta': 12.00,
+                'Picapollo': 12.00,
+                'Chicharron de Chancho': 12.00
+            },
+            'MARINO': {
+                'Arroz con Mariscos': 18.00,
+                'Pescado Frito Intero': 16.00,
+                'Chicharron de Pescado': 17.00,
+                'Chicharron de Calamar': 16.00,
+                'Jalea': 20.00,
+                'Sudado de Pescado': 16.00,
+                'Chupe de Camarones': 18.00,
+                'Parihuela': 18.00
+            },
+            'MENU PESCADO': {
+                'Ceviche Mixto': 18.00,
+                'Ceviche de Pescado': 16.00,
+                'Picante de Mariscos': 18.00,
+                'Pescado con frejoles': 16.00,
+                'Pescado a lo Macho': 18.00,
+                'Chaufa de Mariscos': 16.00,
+                'Saltado de Mariscos': 22.00,
+                'Pescado Frito Filetto': 17.00,
+                'Tallarin Saltado Mariscos': 20.00
+            },
+            'POLLO A LA BRASA': {
+                '1 Pollo (Mesa/Tavolo)': 35.00,
+                '1/2 Pollo (Mesa/Tavolo)': 23.00,
+                '1/4 Pollo (Mesa/Tavolo)': 15.00,
+                '1 Pollo (Mostrito)': 45.00,
+                '1/2 Pollo (Mostrito)': 28.00,
+                '1/4 Pollo (Mostrito)': 18.00
+            },
+            'DESSERT': {
+                'Torta 3 Leches': 5.00,
+                'Torta Helada': 5.00,
+                'Torta de Chocolate': 5.00,
+                'Gelatina': 2.50,
+                'Alfajores': 2.00
+            },
+            'COMBOS': {
+                'Combo Mixto': 55.00,
+                'Combo de Pescado': 50.00,
+                'Duo Marino': 30.00
+            },
+            'BIBITE ALCOLICHE': {
+                'Birra Heineken 66 CL': 3.50,
+                'Birra Moretti 66 CL': 3.50,
+                'Birra Cristal 33 CL (Perù)': 6.00,
+                'Birra Cusqueña 33 CL (Perù)': 5.00,
+                'Birra Cusqueña 33 CL (Perù) Nera': 5.00,
+                'Pisco Sour': 6.00,
+                'Cuba Libre': 5.00,
+                'Amaro Limoncello Grappa Sambuca': 2.50,
+                'Birra alla Spina Media': 3.50,
+                'Birra alla Spina Grande': 6.00
+            },
+            'BIBITE ANALCOLICHE': {
+                'Acqua Frizzante (1/2 LT)': 1.50,
+                'Acqua Naturale (1/2 LT)': 1.50,
+                'Jugo de Maracuya (1 LT) (Perù)': 8.00,
+                'Chicha Morada (1 LT) (Perù)': 8.00,
+                'Limonada (1 LT)': 5.00,
+                'Limonada Frozen (1 LT)': 5.00,
+                'Coca Cola (1 1/2 LT)': 5.00,
+                'Inca Kola Perù(1 1/2 LT)': 8.50,
+                'Inca Kola Perù(2 LT)': 12.00,
+                'Tè alla Pesca (1 1/2 LT)': 3.50,
+                'Bibite Lattine 33 CL': 2.00
+            }
+        };
+
+        let ordineCorrente = {};
+        let tavoloSelezionato = null;
+        let contoSelezionato = null;
+
+        function aggiornaView() {
+            const viewSelect = document.getElementById('viewSelect');
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(viewSelect.value).classList.add('active');
+
+            if (viewSelect.value === 'cassa') {
+                const password = prompt("Inserisci la password per accedere alla cassa:");
+                if (password !== 'ADMIN2024') {
+                    alert('Password errata. Accesso negato.');
+                    viewSelect.value = 'sala';
+                    document.getElementById('sala').classList.add('active');
+                } else {
+                    aggiornaReportOggi();
+                    aggiornaSelect('tavolo');
+                    aggiornaSelect('conto');
+                }
+            }
+        }
+
+        function inizializzaPOS() {
+            setupTavoli();
+            setupCategoryTabs();
+            setupMenuGrid();
+            setupMenuGridCassa();
+            aggiornaSelect('tavolo');
+            aggiornaSelect('conto');
+            mostraOrdini();
+            aggiornaReportOggi();
+            aggiornaTavoliOccupati();
+        }
+
+        function setupTavoli() {
+            const tavoloSelect = document.getElementById('tavoloSelect');
+            tavoloSelect.innerHTML = '<option value="">Seleziona un tavolo</option>';
+            for (let i = 1; i <= 20; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `TAVOLO ${i}`;
+                tavoloSelect.appendChild(option);
+            }
+            tavoloSelect.onchange = () => selezionaTavolo(tavoloSelect.value);
+        }
+
+        function selezionaTavolo(numero) {
+            tavoloSelezionato = numero;
+            contoSelezionato = null;
+            document.getElementById('tavolo-selezionato').textContent = `Tavolo ${numero} selezionato`;
+            caricaOrdineEsistente(numero);
+        }
+
+        async function caricaOrdineEsistente(numero) {
+            const ordiniRef = ref(db, 'ordini');
+            const snapshot = await get(ordiniRef);
+            const ordini = snapshot.val() || {};
+            
+            const ordineEsistente = Object.entries(ordini).find(([_, o]) => o.tavolo == numero && o.stato !== 'COMPLETATO');
+            if (ordineEsistente) {
+                ordineCorrente = { id: ordineEsistente[0], ...ordineEsistente[1] };
+            } else {
+                ordineCorrente = { tavolo: numero, piatti: {} };
+            }
+            aggiornaOrdine();
+        }
+
+        function setupCategoryTabs() {
+            const categorieSelect = document.getElementById('categoria');
+            const categorieCassaSelect = document.getElementById('categoria-cassa');
+            categorieSelect.innerHTML = '<option value="">Seleziona una categoria</option>';
+            categorieCassaSelect.innerHTML = '<option value="">Seleziona una categoria</option>';
+            Object.keys(MENU).forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria;
+                option.textContent = categoria;
+                categorieSelect.appendChild(option);
+                categorieCassaSelect.appendChild(option.cloneNode(true));
+            });
+        }
+
+        function setupMenuGrid() {
+            const menuGrid = document.getElementById('menu-grid');
+            menuGrid.innerHTML = '';
+            Object.entries(MENU).forEach(([categoria, piatti]) => {
+                Object.entries(piatti).forEach(([piatto, prezzo]) => {
+                    const menuItem = document.createElement('div');
+                    menuItem.className = 'menu-item';
+                    menuItem.innerHTML = `
+                        <div>${piatto}</div>
+                        <div class="price">€ ${prezzo.toFixed(2)}</div>
+                        <div class="quantity-control">
+                            <button onclick="modificaQuantita('${piatto}', -1)">-</button>
+                            <span class="quantity-display" id="quantita-${piatto.replace(/\s+/g, '-')}">0</span>
+                            <button onclick="modificaQuantita('${piatto}', 1)">+</button>
+                        </div>
+                    `;
+                    menuItem.dataset.categoria = categoria;
+                    menuGrid.appendChild(menuItem);
+                });
+            });
+        }
+
+        function setupMenuGridCassa() {
+            const menuGridCassa = document.getElementById('menu-grid-cassa');
+            menuGridCassa.innerHTML = '';
+            Object.entries(MENU).forEach(([categoria, piatti]) => {
+                Object.entries(piatti).forEach(([piatto, prezzo]) => {
+                    const menuItem = document.createElement('div');
+                    menuItem.className = 'menu-item';
+                    menuItem.innerHTML = `
+                        <div>${piatto}</div>
+                        <div class="price">€ ${prezzo.toFixed(2)}</div>
+                        <div class="quantity-control">
+                            <button onclick="modificaQuantitaCassa('${piatto}', -1)">-</button>
+                            <span class="quantity-display" id="quantita-cassa-${piatto.replace(/\s+/g, '-')}">0</span>
+                            <button onclick="modificaQuantitaCassa('${piatto}', 1)">+</button>
+                        </div>
+                    `;
+                    menuItem.dataset.categoria = categoria;
+                    menuGridCassa.appendChild(menuItem);
+                });
+            });
+        }
+
+        function filterMenu() {
+            const categoria = document.getElementById('categoria').value;
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.style.display = (categoria === '' || item.dataset.categoria === categoria) ? 'block' : 'none';
+            });
+        }
+
+        function filterMenuCassa() {
+            const categoria = document.getElementById('categoria-cassa').value;
+            const menuItems = document.querySelectorAll('#menu-grid-cassa .menu-item');
+            menuItems.forEach(item => {
+                item.style.display = (categoria === '' || item.dataset.categoria === categoria) ? 'block' : 'none';
+            });
+        }
+
+        async function aggiornaSelect(tipo) {
+            const selectRef = ref(db, tipo === 'tavolo' ? 'ordini' : 'conti');
+            const snapshot = await get(selectRef);
+            const data = snapshot.val() || {};
+            
+            const select = document.getElementById(`${tipo === 'tavolo' ? 'tavoli-aperti' : 'conti-aperti'}`);
+            select.innerHTML = `<option value="">Seleziona ${tipo}</option>`;
+            
+            Object.entries(data).forEach(([key, item]) => {
+                if (item.stato !== 'COMPLETATO') {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = tipo === 'tavolo' ? `Tavolo ${item.tavolo}` : `Conto ${key} - ${item.nome || 'Senza nome'}`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        async function modificaQuantita(prodotto, delta, tavoloId = null) {
+            let ordine = tavoloId ? await getOrdine(tavoloId) : ordineCorrente;
+            if (!ordine.piatti) {
+                ordine.piatti = {};
+            }
+            ordine.piatti[prodotto] = (ordine.piatti[prodotto] || 0) + delta;
+            if (ordine.piatti[prodotto] <= 0) {
+                delete ordine.piatti[prodotto];
+            }
+            if (tavoloId) {
+                await aggiornaTavoloOccupato(tavoloId, ordine);
+            } else {
+                ordineCorrente = ordine;
+                aggiornaOrdine();
+            }
+        }
+
+        async function modificaQuantitaCassa(prodotto, delta) {
+            if (!contoSelezionato) {
+                alert('Seleziona prima un conto');
+                return;
+            }
+            const contoRef = ref(db, `conti/${contoSelezionato}`);
+            const snapshot = await get(contoRef);
+            let conto = snapshot.val() || { piatti: {} };
+            
+            conto.piatti[prodotto] = (conto.piatti[prodotto] || 0) + delta;
+            if (conto.piatti[prodotto] <= 0) {
+                delete conto.piatti[prodotto];
+            }
+            
+            await update(contoRef, conto);
+            caricaDettagliConto(contoSelezionato);
+        }
+
+        async function getOrdine(ordineId) {
+            const ordineRef = ref(db, `ordini/${ordineId}`);
+            const snapshot = await get(ordineRef);
+            return snapshot.val() || {};
+        }
+
+        function aggiornaOrdine() {
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '';
+            let totale = 0;
+
+            Object.entries(ordineCorrente.piatti || {}).forEach(([piatto, quantita]) => {
+                const prezzo = trovaPrezzoPiatto(piatto);
+                const listItem = document.createElement('div');
+                listItem.className = 'order-item';
+                listItem.innerHTML = `
+                    <span>${piatto} x${quantita}</span>
+                    <span>€ ${(prezzo * quantita).toFixed(2)}</span>
+                `;
+                orderList.appendChild(listItem);
+                totale += prezzo * quantita;
+
+                const quantityDisplay = document.getElementById(`quantita-${piatto.replace(/\s+/g, '-')}`);
+                if (quantityDisplay) {
+                    quantityDisplay.textContent = quantita;
+                }
+            });
+
+            document.getElementById('total').textContent = `Totale: € ${totale.toFixed(2)}`;
+        }
+
+        function trovaPrezzoPiatto(piatto) {
+            for (let categoria in MENU) {
+                if (MENU[categoria][piatto]) {
+                    return MENU[categoria][piatto];
+                }
+            }
+            return 0;
+        }
+
+        async function inviaOrdine() {
+    if (!tavoloSelezionato) {
+        alert('Seleziona un tavolo prima di inviare l\'ordine');
+        return;
+    }
+    if (Object.keys(ordineCorrente.piatti || {}).length === 0) {
+        alert('Aggiungi almeno un prodotto all\'ordine');
+        return;
+    }
+
+    const ordiniRef = ref(db, 'ordini');
+    const snapshot = await get(ordiniRef);
+    const ordini = snapshot.val() || {};
+
+    // Cerca un ordine esistente per il tavolo selezionato
+    let ordineEsistente = null;
+    let ordineEsistenteKey = null;
+    Object.entries(ordini).forEach(([key, ordine]) => {
+        if (ordine.tavolo === tavoloSelezionato && ordine.stato !== 'COMPLETATO') {
+            ordineEsistente = ordine;
+            ordineEsistenteKey = key;
+        }
+    });
+
+    if (ordineEsistente) {
+        // Aggiorna l'ordine esistente
+        const piatti = { ...ordineEsistente.piatti };
+        Object.entries(ordineCorrente.piatti).forEach(([piatto, quantita]) => {
+            piatti[piatto] = (piatti[piatto] || 0) + quantita;
+        });
+
+        await update(ref(db, `ordini/${ordineEsistenteKey}`), {
+            piatti: piatti,
+            orario: new Date().toISOString()
+        });
+
+        alert('Ordine aggiornato con successo');
+    } else {
+        // Crea un nuovo ordine
+        const nuovoOrdine = {
+            tavolo: tavoloSelezionato,
+            piatti: ordineCorrente.piatti,
+            stato: 'NON GESTITO',
+            orario: new Date().toISOString()
+        };
+        await push(ordiniRef, nuovoOrdine);
+        alert('Nuovo ordine inviato con successo');
+    }
+
+    ordineCorrente = { tavolo: tavoloSelezionato, piatti: {} };
+    aggiornaOrdine();
+    aggiornaTavoliOccupati();
+}
+
+
+        function mostraOrdini() {
+            const ordiniRef = ref(db, 'ordini');
+            onValue(ordiniRef, (snapshot) => {
+                const data = snapshot.val();
+                const ordiniDiv = document.getElementById('ordini');
+                ordiniDiv.innerHTML = '';
+
+                if (!data) {
+                    ordiniDiv.innerHTML = '<p>Nessun ordine presente</p>';
+                    return;
+                }
+
+                Object.entries(data).forEach(([key, ordine]) => {
+                    if (ordine.stato !== 'COMPLETATO') {
+                        const orderCard = document.createElement('div');
+                        orderCard.className = `order-card ${ordine.stato.toLowerCase().replace(' ', '-')}`;
+                        orderCard.innerHTML = `
+                            <h3>Tavolo ${ordine.tavolo}</h3>
+                            <p>Stato: ${ordine.stato}</p>
+                            <ul>
+                                ${Object.entries(ordine.piatti).map(([p, q]) => `<li>${p}: ${q}</li>`).join('')}
+                            </ul>
+                            <p>Orario: ${new Date(ordine.orario).toLocaleString()}</p>
+                            <div class="state-buttons">
+                                <button class="state-button" onclick="cambiaStato('${key}', 'NON GESTITO')">Non Gestito</button>
+                                <button class="state-button" onclick="cambiaStato('${key}', 'IN PREPARAZIONE')">In Preparazione</button>
+                                <button class="state-button" onclick="cambiaStato('${key}', 'COMPLETATO')">Completato</button>
+                            </div>
+                            <button class="stampa-comanda" onclick="stampaComanda('${key}')">STAMPA COMANDA</button>
+                        `;
+                        ordiniDiv.appendChild(orderCard);
+                    }
+                });
+            });
+        }
+
+        async function cambiaStato(ordineId, nuovoStato) {
+            const ordineRef = ref(db, 'ordini/' + ordineId);
+            if (nuovoStato === 'COMPLETATO') {
+                await update(ordineRef, { stato: 'IN PAGAMENTO' });
+            } else {
+                await update(ordineRef, { stato: nuovoStato });
+            }
+            aggiornaTavoliOccupati();
+        }
+
+        async function caricaDettagliTavolo(id) {
+            const ordineRef = ref(db, 'ordini/' + id);
+            const snapshot = await get(ordineRef);
+            const ordine = snapshot.val();
+
+            if (ordine && ordine.stato !== 'COMPLETATO') {
+                const dettagliDiv = document.getElementById('dettagli-tavolo');
+                let totale = 0;
+                dettagliDiv.innerHTML = `
+                    <h4>Tavolo ${ordine.tavolo}</h4>
+                    <ul>
+                        ${Object.entries(ordine.piatti).map(([piatto, quantita]) => {
+                            const prezzo = trovaPrezzoPiatto(piatto);
+                            totale += prezzo * quantita;
+                            return `<li>${piatto} x${quantita}: € ${(prezzo * quantita).toFixed(2)}</li>`;
+                        }).join('')}
+                    </ul>
+                    <p><strong>Totale: € ${totale.toFixed(2)}</strong></p>
+                `;
+            } else {
+                document.getElementById('dettagli-tavolo').innerHTML = '<p>Nessun ordine attivo per questo tavolo</p>';
+            }
+        }
+
+        async function finalizzaPagamento(tipo) {
+            const id = document.getElementById(tipo === 'tavolo' ? 'tavoli-aperti' : 'conti-aperti').value;
+            if (!id) {
+                alert(`Seleziona un ${tipo} da finalizzare`);
+                return;
+            }
+
+            const contoRef = ref(db, `${tipo === 'tavolo' ? 'ordini' : 'conti'}/${id}`);
+            const snapshot = await get(contoRef);
+            const conto = snapshot.val();
+
+            if (conto && conto.stato !== 'COMPLETATO') {
+                // Calcola il totale
+                let totale = Object.entries(conto.piatti).reduce((sum, [piatto, quantita]) => {
+                    return sum + trovaPrezzoPiatto(piatto) * quantita;
+                }, 0);
+
+                // Archivia il pagamento
+                const pagamentiRef = ref(db, 'pagamenti');
+                await push(pagamentiRef, {
+                    ...conto,
+                    totale: totale,
+                    dataPagamento: new Date().toISOString()
+                });
+
+                // Aggiorna lo stato del conto/ordine a COMPLETATO
+                await update(contoRef, { stato: 'COMPLETATO' });
+
+                alert(`Pagamento di € ${totale.toFixed(2)} finalizzato con successo`);
+                aggiornaSelect(tipo);
+                aggiornaReportOggi();
+                aggiornaTavoliOccupati();
+
+                // Pulisci i dettagli del tavolo dopo la finalizzazione
+                document.getElementById('dettagli-tavolo').innerHTML = '';
+            } else {
+                alert('Nessun conto attivo selezionato');
+            }
+        }
+
+        async function apriNuovoConto() {
+            const nomeCliente = prompt("Nome del cliente:");
+            if (!nomeCliente) return;
+
+            const contiRef = ref(db, 'conti');
+            const nuovoConto = {
+                nome: nomeCliente,
+                stato: 'APERTO',
+                piatti: {}
+            };
+            const newContoRef = await push(contiRef, nuovoConto);
+            
+            alert('Nuovo conto aperto');
+            aggiornaSelect('conto');
+            contoSelezionato = newContoRef.key;
+            tavoloSelezionato = null;
+        }
+
+        async function generaReport(periodo) {
+    const pagamentiRef = ref(db, 'pagamenti');
+    const snapshot = await get(pagamentiRef);
+    const pagamenti = snapshot.val() || {};
+
+    let dataInizio;
+    const oggi = new Date();
+    oggi.setHours(23, 59, 59, 999); // Imposta la fine della giornata corrente
+
+    switch(periodo) {
+        case 'oggi':
+            dataInizio = new Date(oggi);
+            dataInizio.setHours(0, 0, 0, 0);
+            break;
+        case 'settimana':
+            dataInizio = new Date(oggi);
+            dataInizio.setDate(dataInizio.getDate() - dataInizio.getDay()); // Inizio della settimana corrente (domenica)
+            dataInizio.setHours(0, 0, 0, 0);
+            break;
+        case 'mese':
+            dataInizio = new Date(oggi.getFullYear(), oggi.getMonth(), 1); // Primo giorno del mese corrente
+            break;
+        case 'anno':
+            dataInizio = new Date(oggi.getFullYear(), 0, 1); // Primo giorno dell'anno corrente
+            break;
+    }
+
+    let totalePeriodo = 0;
+    let conteggioPiatti = {};
+    let conteggioGiornaliero = {};
+
+    Object.values(pagamenti).forEach(pagamento => {
+        const dataPagamento = new Date(pagamento.dataPagamento);
+        if (dataPagamento >= dataInizio && dataPagamento <= oggi) {
+            totalePeriodo += pagamento.totale;
+            const dataFormattata = dataPagamento.toISOString().split('T')[0];
+            conteggioGiornaliero[dataFormattata] = (conteggioGiornaliero[dataFormattata] || 0) + pagamento.totale;
+            Object.entries(pagamento.piatti).forEach(([piatto, quantita]) => {
+                conteggioPiatti[piatto] = (conteggioPiatti[piatto] || 0) + quantita;
+            });
+        }
+    });
+
+    let reportHTML = `<h4>Report ${periodo}</h4>`;
+    reportHTML += `<p>Totale incasso: € ${totalePeriodo.toFixed(2)}</p>`;
+    reportHTML += '<h5>Incassi giornalieri:</h5><ul>';
+    Object.entries(conteggioGiornaliero)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .forEach(([data, incasso]) => {
+            reportHTML += `<li>${data}: € ${incasso.toFixed(2)}</li>`;
+        });
+    reportHTML += '</ul>';
+    reportHTML += '<h5>Piatti più venduti:</h5><ul>';
+    Object.entries(conteggioPiatti)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .forEach(([piatto, quantita]) => {
+            reportHTML += `<li>${piatto}: ${quantita}</li>`;
+        });
+    reportHTML += '</ul>';
+
+    document.getElementById('reportDettagliato').innerHTML = reportHTML;
+}
+
+        async function aggiornaReportOggi() {
+            const pagamentiRef = ref(db, 'pagamenti');
+            const snapshot = await get(pagamentiRef);
+            const pagamenti = snapshot.val() || {};
+
+            const oggi = new Date();
+            oggi.setHours(0, 0, 0, 0);
+
+            let totaleOggi = 0;
+
+            Object.values(pagamenti).forEach(pagamento => {
+                const dataPagamento = new Date(pagamento.dataPagamento);
+                if (dataPagamento >= oggi) {
+                    totaleOggi += pagamento.totale;
+                }
+            });
+
+            document.getElementById('reportOggi').textContent = `Incasso di oggi: € ${totaleOggi.toFixed(2)}`;
+        }
+
+        function aggiornaTavoliOccupati() {
+            const ordiniRef = ref(db, 'ordini');
+            onValue(ordiniRef, (snapshot) => {
+                const ordini = snapshot.val() || {};
+                const tavoliOccupatiList = document.getElementById('tavoli-occupati-list');
+                const tavoliOccupatiListCassa = document.getElementById('tavoli-occupati-list-cassa');
+                tavoliOccupatiList.innerHTML = '';
+                tavoliOccupatiListCassa.innerHTML = '';
+
+                Object.entries(ordini).forEach(([key, ordine]) => {
+                    if (ordine.stato !== 'COMPLETATO') {
+                        const tavoloDiv = document.createElement('div');
+                        tavoloDiv.className = `tavolo-occupato ${ordine.stato.toLowerCase().replace(' ', '-')}`;
+                        tavoloDiv.innerHTML = `
+                            <h4>Tavolo ${ordine.tavolo}</h4>
+                            <p>Stato: ${ordine.stato}</p>
+                            <ul>
+                                ${Object.entries(ordine.piatti).map(([p, q]) => `
+                                    <li>
+                                        ${p}: ${q}
+                                        <div class="quantity-control">
+                                            <button onclick="modificaQuantita('${p}', -1, '${key}')">-</button>
+                                            <button onclick="modificaQuantita('${p}', 1, '${key}')">+</button>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <button class="stampa-comanda" onclick="stampaComanda('${key}')">STAMPA COMANDA</button>
+                        `;
+                        tavoliOccupatiList.appendChild(tavoloDiv.cloneNode(true));
+                        tavoliOccupatiListCassa.appendChild(tavoloDiv);
+                    }
+                });
+                
+                aggiornaSelect('tavolo');
+            });
+        }
+
+        async function aggiornaTavoloOccupato(tavoloId, ordineAggiornato) {
+            const ordineRef = ref(db, `ordini/${tavoloId}`);
+            if (Object.keys(ordineAggiornato.piatti).length === 0) {
+                // Se non ci sono più piatti, rimuovi l'ordine
+                await remove(ordineRef);
+            } else {
+                await update(ordineRef, ordineAggiornato);
+            }
+            aggiornaTavoliOccupati();
+        }
+
+        async function stampaComanda(ordineId) {
+            const ordineRef = ref(db, `ordini/${ordineId}`);
+            const snapshot = await get(ordineRef);
+            const ordine = snapshot.val();
+
+            if (!ordine) {
+                alert("Ordine non trovato");
+                return;
+            }
+
+            let comandaHTML = `
+                <html>
+                <head>
+                    <title>Comanda - Tavolo ${ordine.tavolo}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        h1 { text-align: center; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid black; padding: 5px; text-align: left; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Comanda - Tavolo ${ordine.tavolo}</h1>
+                    <p><strong>Stato:</strong> ${ordine.stato}</p>
+                    <p><strong>Orario:</strong> ${new Date(ordine.orario).toLocaleString()}</p>
+                    <table>
+                        <tr>
+                            <th>Piatto</th>
+                            <th>Quantità</th>
+                        </tr>
+                        ${Object.entries(ordine.piatti).map(([piatto, quantita]) => `
+                            <tr>
+                                <td>${piatto}</td>
+                                <td>${quantita}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(comandaHTML);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+
+        // Event listeners
+        document.getElementById('viewSelect').addEventListener('change', aggiornaView);
+        document.getElementById('categoria').addEventListener('change', filterMenu);
+        document.getElementById('categoria-cassa').addEventListener('change', filterMenuCassa);
+        document.getElementById('tavoli-aperti').addEventListener('change', (e) => {
+            tavoloSelezionato = e.target.value;
+            contoSelezionato = null;
+            caricaDettagliTavolo(e.target.value);
+        });
+        document.getElementById('conti-aperti').addEventListener('change', (e) => {
+            contoSelezionato = e.target.value;
+            tavoloSelezionato = null;
+            caricaDettagliTavolo(e.target.value);
+        });
+
+        // Inizializzazione
+        window.onload = inizializzaPOS;
+
+        // Rendi le funzioni accessibili globalmente
+        window.modificaQuantita = modificaQuantita;
+        window.modificaQuantitaCassa = modificaQuantitaCassa;
+        window.inviaOrdine = inviaOrdine;
+        window.cambiaStato = cambiaStato;
+        window.finalizzaPagamento = finalizzaPagamento;
+        window.apriNuovoConto = apriNuovoConto;
+        window.generaReport = generaReport;
+        window.selezionaTavolo = selezionaTavolo;
+        window.stampaComanda = stampaComanda;
+    </script>
+</body>
+</html>
